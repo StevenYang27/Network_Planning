@@ -199,7 +199,7 @@ class Graph:
         topologicalList = self.getTopologicalSorting()
         if topologicalList is None:
             print('有环图')
-            return
+            return None
         else:
             # 最早系列:
             for knotID in topologicalList:
@@ -263,7 +263,8 @@ class Graph:
                     sufKnotPos = self.__IDToPos(sufKnotID)
                     inDegreeList[sufKnotPos] -= 1
             if not changed:
-                raise TypeError('This graph contains a circle.')
+                # raise TypeError('This graph contains a circle.')
+                return False
         colsNum = len(knotsGroupByXCoord)
         maxColLength = max(len(col) for col in knotsGroupByXCoord)
         unitXLength = canvasSize[0] // (colsNum + 1)
@@ -433,8 +434,8 @@ class Graph:
         initLinkList = []
         for item in SQLData:
             knot = Knot()
-            knot.ID = item['ID']
-            knot.last_time = item['LT']
+            knot.ID = int(item['ID'])
+            knot.last_time = int(item['LT'])
             knot.name = item['name']
             self.knotList.append(knot)
             if item['pre'] == [0]:
@@ -466,7 +467,12 @@ class Graph:
                 self.knotList[pos].pre_item.append('无')
             if len(self.knotList[pos].suf_item) == 0:
                 self.knotList[pos].suf_item.append('无')
-        self.__count()
+        if self.getTopologicalSorting() is None:
+            print("self.getTopologicalSorting() is None")
+            return True  # 是有环图
+        else:
+            self.__count()
+            return False
 
     def getAllRelatedKnotID(self, _ID):  # 获得所有相邻点ID,返回列表
         _pos = self.__IDToPos(_ID)
@@ -520,4 +526,9 @@ class Project:  # 一个工程
         self.startDate = datetime.datetime.strptime(SQLData[0]['startTime'], "%Y-%m-%d")
         self.finishDate = datetime.datetime.strptime(SQLData[0]['finishTime'], "%Y-%m-%d")
         self.duration = int((self.finishDate - self.startDate).days)
-        self.graph.readDataFromSQL(SQLData[1], self.startDate)
+        isCircle = self.graph.readDataFromSQL(SQLData[1], self.startDate)
+        if isCircle:
+            print("Project : isCircle is True , return True")
+            return True
+        else:
+            return False
