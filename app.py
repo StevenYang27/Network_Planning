@@ -47,8 +47,12 @@ def new():
         ItemIntoSQLFile = tempSQLData[1].copy()
         tempSQLData = TranslateTempSQLData(tempSQLData)
         isCircle = p.readDataFromSQL(tempSQLData)
+        overDue = p.duartion_OK()
         p.graph.calculateCoordinates([1000, 500])
         p.graph.info()
+        print(overDue)
+        if overDue is False:
+            return render_template('new.html', title='new', form_one=form_one, overDue=overDue)
         if isCircle is True:
             return render_template('new.html', title='new', form_one=form_one, isCircle=isCircle)
         else:
@@ -77,12 +81,23 @@ def new():
                 db.session.rollback()
                 print('提交失败')
                 print(e)
-            return render_template('view.html', title='view')
+            projectInfo = ProjectForm()
+            projectInfo.project_id = 1
+            projectInfo.project_name = form_one.project_name.data
+            projectInfo.project_ST = form_one.project_ST.data
+            projectInfo.project_FT = form_one.project_FT.data
+            return render_template('view.html', title='view', projectInfo=projectInfo)
 
 
 @app.route('/view/')
 def view():
-    return render_template('view.html', title='view')
+    projectInfo = ProjectForm()
+    for project in DBProject.query.filter().all():
+        projectInfo.project_id = project.project_id
+        projectInfo.project_name = project.project_name
+        projectInfo.project_ST = datetime.datetime.strptime(project.project_ST, '%Y-%m-%d')
+        projectInfo.project_FT = datetime.datetime.strptime(project.project_FT, '%Y-%m-%d')
+    return render_template('view.html', title='view', projectInfo=projectInfo)
 
 
 @app.route('/change/', methods=['GET', 'POST'])
@@ -145,8 +160,13 @@ def change():
         tempSQLData = TranslateTempSQLData(tempSQLData)
         tempP = Project()
         isCircle = tempP.readDataFromSQL(tempSQLData)
+        overDue = tempP.duartion_OK()
         tempP.graph.calculateCoordinates([1000, 500])
         tempP.graph.info()
+        print(overDue)
+        if overDue is False:
+            print('1√')
+            return render_template('change.html', title='change', form_one=form_one, overDue=overDue)
         if isCircle is True:
             return render_template('change.html', title='change', form_one=form_one, isCircle=isCircle)
         else:
@@ -168,7 +188,12 @@ def change():
                 db.session.rollback()
                 print('提交失败')
                 print(e)
-            return render_template('view.html', title='view')
+            projectInfo = ProjectForm()
+            projectInfo.project_id = 1
+            projectInfo.project_name = form_one.project_name.data
+            projectInfo.project_ST = form_one.project_ST.data
+            projectInfo.project_FT = form_one.project_FT.data
+            return render_template('view.html', title='view', projectInfo=projectInfo)
 
 
 @app.route('/graph/')
