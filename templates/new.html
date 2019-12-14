@@ -36,13 +36,20 @@
     <div id="form">
         <div id="subform_project">
             <div id="project_name_container">
-
+                {{form_one.csrf_token}}
+                {{form_one.project_id(value=request.args.get('project_id'))}}
                 {{ form_one.project_name.label }}
                 {{ form_one.project_name }}
+                {% for error in form_one.project_name.errors %}
+                <br>
+                <span style="color: rgb(16, 9, 76);margin-left: 138px;">{{ error }}</span>
+                {% endfor %}
             </div>
-            <div id="project_time_container">
+            <div id="project_pretime_container">
                 {{ form_one.project_ST.label }}
                 {{ form_one.project_ST }}
+            </div>
+            <div id="project_suctime_container">
                 {{ form_one.project_FT.label }}
                 {{ form_one.project_FT }}
             </div>

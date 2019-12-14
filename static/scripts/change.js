@@ -135,12 +135,11 @@ function removeForm() {
     adjustIndices(removeIndex);
 }
 
-
 function FakeremoveForm() {
     alert("已提交的事项不提供删除方法哦");
 }
 
-function addEle(name, pre_item, last_time) {
+function addEle(name, allvalue, pre_item, last_time) {
     let $templateForm = $('#item-_-form');
 
     if (!$templateForm) {
@@ -178,9 +177,9 @@ function addEle(name, pre_item, last_time) {
         let value = pre_item;
         if (pre_item != "无") {
             $item.append("<option value='0'>无</option>");
-            for (let i = 0; i < value.length; i++) {
+            for (let i = 0; i < allvalue.length; i++) {
                 //new Option("text","value")方法
-                let NewOption = new Option(value[i], value[i]);
+                let NewOption = new Option(allvalue[i], allvalue[i]);
                 $item.append(NewOption);
                 $item.selectpicker('refresh');
                 $item.selectpicker('render');
@@ -189,6 +188,13 @@ function addEle(name, pre_item, last_time) {
             for (let i = 0; i < value.length; i++) {
                 //new Option("text","value")方法
                 let NewOption = new Option(value[i], value[i]);
+                $item.append(NewOption);
+                $item.selectpicker('refresh');
+                $item.selectpicker('render');
+            }
+            for (let i = 0; i < allvalue.length; i++) {
+                //new Option("text","value")方法
+                let NewOption = new Option(allvalue[i], allvalue[i]);
                 $item.append(NewOption);
                 $item.selectpicker('refresh');
                 $item.selectpicker('render');
@@ -321,23 +327,45 @@ function onSearch(searchContent) {
     });
 }
 
-$(document).ready(function () {
+function getQueryString(name) {
+    let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    let r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+}
 
+$(document).ready(function () {
     $(function () {
         // 获取item_json
         $.ajax({
             type: 'GET',
-            url: '/getpyitem',
-            data: {"object": "item"},
+            url: '/getdbitem',
+            data: {project_id: parseInt(getQueryString('project_id'))},
             dataType: 'json', // 注意：这里是指希望服务端返回json格式的数据
             success: function (items) { // 这里的data就是json格式的数据
-                console.log(items);
+                let allvalue = [];
+                items.forEach(function(v){
+                    allvalue.push(v.item_name);
+                });
                 items.forEach(function (v) {
-                    addEle(v.name, v.pre_item, v.last_time);
+                    addEle(v.item_name, allvalue, v.item_pre_item, v.item_last_time);
+                });
+                let $ExistForm = $('.subform');
+                $ExistForm.find('select').each(function () {
+                let keyvalue = $('#' + "items-" + $(this).attr("data-id") + "-item_name").val();
+                console.log(keyvalue);
+                let optall = $('#' + "items-" + $(this).attr("data-id") + "-item_pre")[0].options;
+                    for (let i = 0; i < optall.length; i++) {
+                        if (optall[i].value == keyvalue) {
+                            optall.remove(i);
+                        }
+                    }
+                $('#' + "items-" + $(this).attr("data-id") + "-item_pre").selectpicker('refresh');
+                $('#' + "items-" + $(this).attr("data-id") + "-item_pre").selectpicker('render');
                 });
             },
             error: function (xhr, type) {
-                alert('异常')
+                alert('Item数据获取异常')
             }
         });
     });
@@ -353,8 +381,7 @@ $(document).ready(function () {
             addForm();
         }
 
-
-                // 动态添加元素是从哪个函数里面添加的，其触发事件也需写在此函数下，否则查找不到动态添加元素的触发事件
+        // 动态添加元素是从哪个函数里面添加的，其触发事件也需写在此函数下，否则查找不到动态添加元素的触发事件
         let $ExistForm = $('.subform');
         $ExistForm.find('input:first').each(function () {
             $('#' + "items-" + $(this).attr("data-id") + "-item_name").blur(function () {
